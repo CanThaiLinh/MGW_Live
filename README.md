@@ -40,17 +40,17 @@ pod install
 SDK sử dụng native player bên dưới nên yêu cầu ứng dụng phải định danh rõ ràng. Nếu thiếu các key này, SDK sẽ không hoạt động đúng.
 Mở file `Info.plist` của bạn dưới dạng Source Code (hoặc Edit trực tiếp Property List) và bổ sung các mã cấu hình sau:
 ```xml
-<key>AppKey</key>
+<key>appKey</key>
 <string>YOUR_APP_KEY_HERE</string>
-<key>PlayerId</key>
+<key>playerId</key>
 <string>YOUR_PLAYER_ID_HERE</string>
-<key>SecretKey</key>
+<key>secretKey</key>
 <string>YOUR_SECRET_KEY_HERE</string>
 ```
 **Giải thích các key:**
-- **`AppKey`**: Khóa định danh ứng dụng của bạn để giao tiếp với hệ thống MWG.
-- **`PlayerId`**: Mã ID của player được cấp phát riêng cho nền tảng video của bạn.
-- **`SecretKey`**: Khóa bí mật dùng để xác thực hệ thống.
+- **`appKey`**: Khóa định danh ứng dụng của bạn để giao tiếp với hệ thống MWG.
+- **`playerId`**: Mã ID của player được cấp phát riêng cho nền tảng video của bạn.
+- **`secretKey`**: Khóa bí mật dùng để xác thực hệ thống.
 ---
 ## 5. Cấp quyền truy cập thiết bị
 Để tính năng Livestream (phát sóng, ghi hình, thu âm) hoạt động và tránh việc ứng dụng bị crash khi mở trình phát sóng, ứng dụng cần phải được cấp quyền truy cập Camera và Microphone. 
@@ -162,7 +162,7 @@ class DemoVC: UIViewController, MWGPlayerDelegate {
 ## 9. Kết luận
 Tổng kết lại, vòng đời tích hợp SDK **MWG_Live** đòi hỏi bạn thực hiện chuẩn xác 5 bước:
 1. Include thư viện qua **CocoaPods** và build bằng `.xcworkspace`.
-2. Truyền 3 tham số `AppKey`, `PlayerId`, và `SecretKey` vào **`Info.plist`**.
+2. Truyền 3 tham số `appKey`, `playerId`, và `secretKey` vào **`Info.plist`**.
 3. Mở khóa quyền **Camera & Microphone** cũng trong **`Info.plist`**.
 4. Khởi chạy `MWGModule.initialize()` bên trong **`AppDelegate`**.
 5. Chọn đúng **Thiết bị thật** (iPhone/iPad) khi build dự án.
