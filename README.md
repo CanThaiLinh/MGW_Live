@@ -177,7 +177,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         
         // Khởi tạo MWG_Live SDK
-        MWGModule.initialize()
+        MWGSDK.initialize()
         
         return true
     }
@@ -200,8 +200,8 @@ class DemoVC: UIViewController {
             delegate: self // Ánh xạ vào MWGBroadcastDelegate
         )
         
-        // 2. Lấy ViewController từ MWGModule
-        let broadcastVC = MWGModule.createBroadcast(dependency: dependency)
+        // 2. Lấy ViewController từ MWGSDK
+        let broadcastVC = MWGSDK.open(dependency: dependency)
         
         // 3. Hiển thị màn hình Livestream
         navigationController?.pushViewController(broadcastVC, animated: true)
@@ -230,7 +230,7 @@ class DemoVC: UIViewController {
         )
 
         // 2. Lấy ViewController trình phát
-        let playerVC = MWGModule.createPlayerView(dependency: playerDependency)
+        let playerVC = MWGSDK.create(dependency: playerDependency)
 
         // 3. Hiển thị Trình phát video
         navigationController?.pushViewController(playerVC, animated: true)
@@ -309,4 +309,4 @@ extension DemoVC: MWGModuleDelegate {
 ---
 
 > **Kết Luận:** 
-> Tóm gọn lại, cốt lõi luồng tính năng nằm ở việc bạn cung cấp các cấu hình Data thích hợp (thông qua `MWG...Representable`) => Khởi tạo Dependency tương ứng => Giao quyền cho `MWGModule` => Gọi hàm `MWGModule.create...` để push ra View hiển thị rồi mới bắt sự kiện ngược lại ở Client. Chúc bạn tích hợp thành công!
+> Tóm gọn lại, cốt lõi luồng tính năng nằm ở việc bạn cung cấp các cấu hình Data thích hợp (thông qua `MWG...Representable`) => Khởi tạo Dependency tương ứng => Giao quyền cho `MWGSDK` => Gọi hàm `MWGSDK.create(...)` hoặc `MWGSDK.open(...)` để push ra View hiển thị rồi mới bắt sự kiện ngược lại ở Client. Chúc bạn tích hợp thành công!
