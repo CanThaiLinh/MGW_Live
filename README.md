@@ -133,15 +133,8 @@ Trước tiên, hãy tạo các Struct hoặc Class tuân thủ các protocol tr
 ```swift
 import MWG_Live
 
-// Cấu hình Authentication & Nguồn cho Player
-struct DemoSDKConfig: MWGSDKConfigRepresentable {
-    var tmpDomain: String
-    var secretKey: String
-}
-
-// Cấu hình thông số một Video / Stream
+// Cấu hình thông số một Video / Stream (để xem Player)
 struct DemoPlayerConfig: MWGPlayerConfigRepresentable {
-    var type: MWGPlayerType // .live hoặc .video
     var videoId: String
     var url: String
 }
@@ -178,6 +171,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         // Khởi tạo MWG_Live SDK
         MWGSDK.initialize()
+        
+        // Theo dõi LogLevel (tuỳ chọn)
+        MWGSDK.setLogLevel(.debug)
         
         return true
     }
@@ -216,20 +212,19 @@ Khi người dùng bấm vào xem 1 luồng Live đang phát hoặc Video (VOD):
 class DemoVC: UIViewController {
     
     @objc private func watchLive() {
-        // 1. Cấu hình Dependency (Danh sách phát & Token)
+        // 1. Cấu hình cấu trúc Models cho Danh sách phát
+        let samplePlayers: [any MWGPlayerConfigRepresentable] = [
+            DemoPlayerConfig(videoId: UUID().uuidString, url: "https://your-domain/live.m3u8"),
+            DemoPlayerConfig(videoId: UUID().uuidString, url: "https://your-domain/video.m3u8")
+        ]
+        
+        // 2. Khởi tạo Dependency
         let playerDependency = MWGPlayerDependency(
-            config: DemoSDKConfig(
-                tmpDomain: "your-tmp-domain",
-                secretKey: "your-secret-key"
-            ),
-            players: [
-                DemoPlayerConfig(type: .live, videoId: "liveId1", url: "https://your-domain/live.m3u8"),
-                DemoPlayerConfig(type: .video, videoId: "vodId1", url: "https://your-domain/video.m3u8")
-            ],
+            players: samplePlayers,
             delegate: self // Ánh xạ vào MWGPlayerDelegate
         )
 
-        // 2. Lấy ViewController trình phát
+        // 3. Lấy ViewController trình phát
         let playerVC = MWGSDK.create(dependency: playerDependency)
 
         // 3. Hiển thị Trình phát video
