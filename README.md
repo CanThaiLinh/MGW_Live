@@ -1,7 +1,7 @@
 # Hướng dẫn Tích hợp MWG_Live SDK cho iOS
 
 ## 1. Giới thiệu
-**MWG_Live** là SDK cung cấp giải pháp toàn diện để tích hợp tính năng Livestream và phát video trực tiếp vào ứng dụng iOS của bạn một cách nhanh chóng và tối ưu.
+**MWG_Live** là SDK cung cấp giải pháp toàn diện để tích hợp tính năng **Livestream** và **phát video trực tiếp** vào ứng dụng iOS của bạn một cách nhanh chóng và tối ưu.
 
 **Lưu ý hiện tại:**
 - SDK hiện chỉ hỗ trợ cài đặt thông qua **CocoaPods**.
@@ -172,15 +172,47 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Khởi tạo MWG_Live SDK
         MWGSDK.initialize()
         
-        // Theo dõi LogLevel (tuỳ chọn)
-        MWGSDK.setLogLevel(.debug)
-        
         return true
     }
 }
 ```
 
-### 7.2. Mở màn hình Livestream (Broadcast)
+### 7.2. Bật Log SDK (Tuỳ chọn)
+Mặc định SDK **không in log** ra console. Nếu bạn cần theo dõi hoạt động nội bộ của SDK trong quá trình phát triển, hãy gọi `enableLogSDK()` **trước** `initialize()`:
+
+```swift
+func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+    
+    // Bật log SDK (tuỳ chọn — chỉ dùng khi cần debug)
+    MWGSDK.enableLogSDK()
+    
+    // Khởi tạo MWG_Live SDK
+    MWGSDK.initialize()
+    
+    return true
+}
+```
+
+Khi bật log, output sẽ có format:
+```
+🔍 [MWG_Live SDK] [15:15:15 26/03/2026] [DEBUG] Player initialized successfully
+ℹ️ [MWG_Live SDK] [15:15:15 26/03/2026] [INFO] Stream connected
+⚠️ [MWG_Live SDK] [15:15:15 26/03/2026] [WARNING] Low bandwidth detected
+❌ [MWG_Live SDK] [15:15:15 26/03/2026] [ERROR] Connection lost
+```
+
+**Các mức log và icon tương ứng:**
+
+| Icon | Level     | Mô tả                                      |
+| :--- | :-------- | :------------------------------------------ |
+| 🔍   | `DEBUG`   | Thông tin chi tiết dùng để gỡ lỗi          |
+| ℹ️   | `INFO`    | Thông tin trạng thái hoạt động bình thường  |
+| ⚠️   | `WARNING` | Cảnh báo các vấn đề tiềm ẩn                |
+| ❌   | `ERROR`   | Lỗi nghiêm trọng cần xử lý                |
+
+> **Lưu ý:** Không nên bật log trên bản production, chỉ sử dụng khi phát triển và gỡ lỗi.
+
+### 7.3. Mở màn hình Livestream (Broadcast)
 Khi người dùng (Streamer) bấm vào nút phát sóng, bạn tạo ra màn hình Broadcast từ SDK:
 
 ```swift
@@ -197,7 +229,7 @@ class DemoVC: UIViewController {
         )
         
         // 2. Lấy ViewController từ MWGSDK
-        let broadcastVC = MWGSDK.open(dependency: dependency)
+        let broadcastVC = MWGSDK.createBroadcastVC(dependency: dependency)
         
         // 3. Hiển thị màn hình Livestream
         navigationController?.pushViewController(broadcastVC, animated: true)
@@ -205,7 +237,7 @@ class DemoVC: UIViewController {
 }
 ```
 
-### 7.3. Mở màn hình Xem Live / VOD (Player)
+### 7.4. Mở màn hình Xem Live / VOD (Player)
 Khi người dùng bấm vào xem 1 luồng Live đang phát hoặc Video (VOD):
 
 ```swift
@@ -214,8 +246,8 @@ class DemoVC: UIViewController {
     @objc private func watchLive() {
         // 1. Cấu hình cấu trúc Models cho Danh sách phát
         let samplePlayers: [any MWGPlayerConfigRepresentable] = [
-            DemoPlayerConfig(videoId: UUID().uuidString, url: "https://your-domain/live.m3u8"),
-            DemoPlayerConfig(videoId: UUID().uuidString, url: "https://your-domain/video.m3u8")
+            DemoPlayerConfig(videoId: "liveId", url: "https://your-domain/live.m3u8"),
+            DemoPlayerConfig(videoId: "vodId", url: "https://your-domain/video.m3u8")
         ]
         
         // 2. Khởi tạo Dependency
@@ -225,13 +257,55 @@ class DemoVC: UIViewController {
         )
 
         // 3. Lấy ViewController trình phát
-        let playerVC = MWGSDK.create(dependency: playerDependency)
+        let playerVC = MWGSDK.createPlayerVC(dependency: playerDependency)
 
-        // 3. Hiển thị Trình phát video
+        // 4. Hiển thị Trình phát video
         navigationController?.pushViewController(playerVC, animated: true)
     }
 }
 ```
+
+### 7.5. Chi tiết về Cấu hình Trình phát (Player Dependency)
+
+Để khởi tạo một màn hình Player bằng `MWGSDK.createPlayerVC(dependency:)`, bạn cần truyền vào một đối tượng `MWGPlayerDependency`. Đối tượng này đóng gói toàn bộ dữ liệu và cấu hình hiển thị:
+
+```swift
+public struct MWGPlayerDependency {
+    public var media: (any MWGPlayerRepresentable)?
+    public var viewType: MWGViewType?
+    public weak var delegate: (any MWGPlayerDelegate)?
+}
+```
+
+#### 1. MWGPlayerRepresentable (Dữ liệu Media)
+Định nghĩa thông tin của một video hoặc livestream. Thay vì buộc bạn dùng Model của SDK, bạn chỉ cần cho Model của app tuân thủ Protocol này:
+
+- `id` (Int?): ID duy nhất của nội dung media.
+- `name` (String?): Tên hoặc tiêu đề của video/livestream.
+- `description` (String?): Mô tả chi tiết nội dung.
+- `embed` (String?): URL HLS (`.m3u8`) dùng để phát nội dung (quan trọng nhất để player có thể chạy).
+- `strkey` (String?): Stream key (dùng cho luồng live).
+- `thumbnailUrl` (String?): Đường dẫn ảnh bìa hiển thị trước khi phát.
+- `stateLive` (String?): Trạng thái của luồng live (ví dụ: đang live, đã kết thúc, v.v.).
+- `rtmpSV` (String?): Máy chủ RTMP (nếu cần thiết cho cấu hình luồng).
+
+#### 2. MWGViewType (Kiểu hiển thị UI)
+Quyết định giao diện của trình phát sẽ được tối ưu cho loại nội dung nào:
+- `.live`: Tối ưu giao diện cho Livestream (có chat realtime, thả tim, thông tin người đang xem).
+- `.video`: Tối ưu giao diện cho Video On Demand - VOD (có thanh tiến trình, nút tua tới/lui).
+- `.tab`: Giao diện dạng danh sách lướt (dành cho trải nghiệm giống TikTok/Shorts). Mặc định nếu không truyền.
+
+#### 3. MWGPlayerDelegate (Nhận sự kiện từ Player)
+Protocol giúp ứng dụng của bạn biết được trạng thái hiện tại của trình phát video thông qua phương thức `func player(didChangeEvent event: MWGPlayerEvent)`.
+
+Các trạng thái của **MWGPlayerEvent**:
+- `ready`: Trình phát đã tải xong dữ liệu, sẵn sàng phát.
+- `playing`: Video/Livestream đang được phát.
+- `pause`: Video đã bị tạm dừng.
+- `stalled`: Quá trình tải dữ liệu bị nghẽn (mạng chậm, đang buffering).
+- `finished`: Đã phát xong video (đạt đến cuối file, không áp dụng cho luồng live liên tục).
+- `removed`: Trình phát đã bị gỡ bỏ khỏi bộ nhớ (người dùng tắt màn hình).
+- `error`: Xảy ra lỗi trong quá trình phát (link hỏng, mất mạng liên tục).
 
 ---
 
@@ -265,7 +339,7 @@ extension DemoVC: MWGPlayerDelegate {
 }
 ```
 
-### 8.3. MWGModuleDelegate (Sự kiện toàn khối & Tương tác UI đặc biết)
+### 8.3. MWGModuleDelegate (Sự kiện toàn khối & Tương tác UI đặc biệt)
 Delegate này cung cấp các hook mạnh mẽ để bạn tương tác sâu hơn với SDK, chẳng hạn như đóng màn hình `mwgDidClose()` và nạp tiền `mwgWalletUpdated(:)`:
 
 ```swift
@@ -291,7 +365,20 @@ extension DemoVC: MWGModuleDelegate {
 
 ---
 
-## 9. Troubleshooting (Xử lý lỗi)
+## 9. Tóm tắt API `MWGSDK`
+
+| Phương thức | Mô tả |
+| :--- | :--- |
+| `MWGSDK.initialize()` | **Bắt buộc.** Khởi tạo SDK, chuẩn bị player engine và cấu hình runtime. |
+| `MWGSDK.enableLogSDK()` | Bật chế độ in log ra console. Mặc định SDK không in log. |
+| `MWGSDK.setUser(_:)` | Lưu thông tin người dùng và access token cho phiên SDK. |
+| `MWGSDK.clearSession()` | Xoá phiên người dùng đã lưu khi đăng xuất. |
+| `MWGSDK.createPlayerVC(dependency:)` | Tạo ViewController cho trình phát video / xem livestream. |
+| `MWGSDK.createBroadcastVC(dependency:)` | Tạo ViewController cho phát sóng livestream. |
+
+---
+
+## 10. Troubleshooting (Xử lý lỗi)
 
 | Hiện tượng lỗi | Nguyên nhân & Khắc phục |
 | :--- | :--- |
@@ -304,4 +391,4 @@ extension DemoVC: MWGModuleDelegate {
 ---
 
 > **Kết Luận:** 
-> Tóm gọn lại, cốt lõi luồng tính năng nằm ở việc bạn cung cấp các cấu hình Data thích hợp (thông qua `MWG...Representable`) => Khởi tạo Dependency tương ứng => Giao quyền cho `MWGSDK` => Gọi hàm `MWGSDK.create(...)` hoặc `MWGSDK.open(...)` để push ra View hiển thị rồi mới bắt sự kiện ngược lại ở Client. Chúc bạn tích hợp thành công!
+> Tóm gọn lại, cốt lõi luồng tính năng nằm ở việc bạn cung cấp các cấu hình Data thích hợp (thông qua `MWG...Representable`) => Khởi tạo Dependency tương ứng => Giao quyền cho `MWGSDK` => Gọi hàm `MWGSDK.createPlayerVC(...)` hoặc `MWGSDK.createBroadcastVC(...)` để push ra View hiển thị rồi bắt sự kiện ngược lại ở Client. Chúc bạn tích hợp thành công!
