@@ -346,25 +346,13 @@ extension DemoVC: MWGPlayerDelegate {
 ```
 
 ### 8.3. MWGModuleDelegate (Sự kiện toàn khối & Tương tác UI đặc biệt)
-Delegate này cung cấp các hook mạnh mẽ để bạn tương tác sâu hơn với SDK, chẳng hạn như đóng màn hình `mwgDidClose()` và nạp tiền `mwgWalletUpdated(:)`:
+Delegate này cung cấp các hook mạnh mẽ để bạn tương tác sâu hơn với SDK, chẳng hạn như đóng màn hình `mwgDidClose()`:
 
 ```swift
 extension DemoVC: MWGModuleDelegate {
     func mwgDidClose() {
         // Hành động mong muốn khi user nhấn nút x hoặc Thoát khỏi SDK
         navigationController?.popViewController(animated: true)
-    }
-
-    func mwgWalletUpdated(walletID: String, amount: Double) {
-        // Có thể mở một Alert / Bottom Sheet UI nạp tiền từ phía Native...
-        // ... Sau đó cập nhật lại số dư cho UI của SDK
-        
-        // Ví dụ: Update lại UI của SDK sau khi nạp tiền thành công!
-        let newAmount = amount + 50.0 // Giả sử user nạp 50k
-        
-        if let sdkVC = self.navigationController?.topViewController as? MWGWalletUpdatable {
-            sdkVC.updateWalletUI(amount: newAmount)
-        }
     }
 }
 ```
