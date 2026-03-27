@@ -175,8 +175,12 @@ import MWG_Live
 class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         
-        // Khởi tạo MWG_Live SDK
-        MWGSDK.initialize()
+        // Khởi tạo User và Dependency
+        let demoUser = DemoUser(id: "123", name: "Nguyễn Văn A", avatar: nil, isPremium: true)
+        let authDependency = MWGAuthDependency(user: demoUser, accessToken: "your_access_token_here")
+        
+        // Khởi tạo MWG_Live SDK (Bắt buộc)
+        MWGSDK.initialize(dependency: authDependency)
         
         return true
     }
@@ -192,8 +196,12 @@ func application(_ application: UIApplication, didFinishLaunchingWithOptions lau
     // Bật log SDK (tuỳ chọn — chỉ dùng khi cần debug)
     MWGSDK.enableLogSDK()
     
-    // Khởi tạo MWG_Live SDK
-    MWGSDK.initialize()
+    // Khởi tạo User và Dependency
+    let demoUser = DemoUser(id: "123", name: "Nguyễn Văn A", avatar: nil, isPremium: true)
+    let authDependency = MWGAuthDependency(user: demoUser, accessToken: "your_access_token")
+    
+    // Khởi tạo MWG_Live SDK với dependency (Bắt buộc)
+    MWGSDK.initialize(dependency: authDependency)
     
     return true
 }
@@ -346,7 +354,7 @@ extension DemoVC: MWGPlayerDelegate {
 ```
 
 ### 8.3. MWGModuleDelegate (Sự kiện toàn khối & Tương tác UI đặc biệt)
-Delegate này cung cấp các hook mạnh mẽ để bạn tương tác sâu hơn với SDK, chẳng hạn như đóng màn hình `mwgDidClose()`:
+Delegate này cung cấp các hook mạnh mẽ để bạn tương tác sâu hơn với SDK, chẳng hạn như đóng màn hình `mwgDidClose()`
 
 ```swift
 extension DemoVC: MWGModuleDelegate {
@@ -363,7 +371,7 @@ extension DemoVC: MWGModuleDelegate {
 
 | Phương thức | Mô tả |
 | :--- | :--- |
-| `MWGSDK.initialize()` | **Bắt buộc.** Khởi tạo SDK, chuẩn bị player engine và cấu hình runtime. |
+| `MWGSDK.initialize(dependency:)` | **Bắt buộc.** Khởi tạo SDK, lưu thông tin xác thực ban đầu, chuẩn bị player engine và cấu hình runtime. |
 | `MWGSDK.enableLogSDK()` | Bật chế độ in log ra console. Mặc định SDK không in log. |
 | `MWGSDK.setUser(_:)` | Lưu thông tin người dùng và access token cho phiên SDK. |
 | `MWGSDK.clearSession()` | Xoá phiên người dùng đã lưu khi đăng xuất. |
