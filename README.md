@@ -133,10 +133,16 @@ Trước tiên, hãy tạo các Struct hoặc Class tuân thủ các protocol tr
 ```swift
 import MWG_Live
 
-// Cấu hình thông số một Video / Stream (để xem Player)
-struct DemoPlayerConfig: MWGPlayerConfigRepresentable {
-    var videoId: String
-    var url: String
+// Cấu hình thông số một Media Item (Video / Livestream)
+struct DemoMedia: MWGPlayerRepresentable {
+    var id: Int?
+    var name: String?
+    var description: String?
+    var embed: String?
+    var strkey: String?
+    var thumbnailUrl: String?
+    var stateLive: String?
+    var rtmpSV: String?
 }
 
 // Cấu hình thông tin User sử dụng SDK (tuỳ chọn)
@@ -221,10 +227,8 @@ import MWG_Live
 class DemoVC: UIViewController {
     
     @objc private func startLive() {
-        // 1. Khởi tạo đối tượng Dependency (Truyền RTMP và Stream Key)
+        // 1. Khởi tạo đối tượng Dependency (Truyền Delegate lắng nghe sự kiện phát sóng)
         let dependency = MWGBroadcastDependency(
-            rtmpURL: "rtmp://ovp-rtmp.sohatv.vn/...",
-            streamKey: "...",
             delegate: self // Ánh xạ vào MWGBroadcastDelegate
         )
         
@@ -244,16 +248,18 @@ Khi người dùng bấm vào xem 1 luồng Live đang phát hoặc Video (VOD):
 class DemoVC: UIViewController {
     
     @objc private func watchLive() {
-        // 1. Cấu hình cấu trúc Models cho Danh sách phát
-        let samplePlayers: [any MWGPlayerConfigRepresentable] = [
-            DemoPlayerConfig(videoId: "liveId", url: "https://your-domain/live.m3u8"),
-            DemoPlayerConfig(videoId: "vodId", url: "https://your-domain/video.m3u8")
-        ]
+        // 1. Cấu hình Model cho Media cần phát
+        let sampleMedia = DemoMedia(
+            id: 1,
+            name: "Luồng Trực Tiếp 1",
+            embed: "https://your-domain/live.m3u8"
+        )
         
         // 2. Khởi tạo Dependency
         let playerDependency = MWGPlayerDependency(
-            players: samplePlayers,
-            delegate: self // Ánh xạ vào MWGPlayerDelegate
+            media: sampleMedia,
+            viewType: .live, // Có thể là .live, .video, .tab(Cái này bên client sẽ phải tự phân biệt và truyền vào)
+            delegate: self   // Ánh xạ vào MWGPlayerDelegate
         )
 
         // 3. Lấy ViewController trình phát
