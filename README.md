@@ -392,5 +392,47 @@ extension DemoVC: MWGModuleDelegate {
 
 ---
 
+## 11. Hỗ trợ React Native & Các tính năng mới 
+
+SDK nay đã hỗ trợ tích hợp trực tiếp vào **React Native** thông qua Wrapper chuyên dụng. Ngoài ra, phiên bản (1.0.14+) bổ sung hàng loạt tính năng mới: 
+
+- **Tích hợp Live OBS**: Hỗ trợ nhà sáng tạo phát sóng ổn định qua các phần mềm bên ngoài.
+- **Tùy chọn Reels (Tab Video)**: Giao diện Video lướt dọc quen thuộc nhằm tối đa hóa tương tác.
+- **Tính năng Cảnh Báo Vi Phạm Nội Dung**: Tự động lắng nghe cảnh báo `systemMessage` từ Socket để ngăn phát ngôn nhạy cảm. Hệ thống bật Alert box `MWGViolateAlertView` để hiển thị mức độ: "Nhẹ", "Nghiêm trọng", v.v cho Streamer xử lý.
+- **Đồng bộ hóa nâng cao**: Live Polling, View Count và Threading UI an toàn chuẩn mực.
+
+### Các Delegate (Event) được bắn ra ngoài cho React Native:
+
+Thông qua `RCTEventEmitter`, SDK phát ra các event sau sang JS:
+
+1. **`onPlayerEvent`** (Khi xem Video / Live): Trả về `event` thuộc các trạng thái: 
+   - `ready`, `playing`, `pause`, `finished`, `stalled`, `removed`, `error`, `unknown`.
+2. **`onBroadcastStart`** (Khi bắt đầu phát sóng Live qua luồng).
+3. **`onBroadcastStop`** (Khi ngắt / dừng phát sóng Live).
+4. **`onBroadcastError`** (Cảnh báo lỗi phát sóng, trả về kèm `message` mô tả lỗi).
+
+#### Ví dụ sử dụng tiện ích React Hook (`useMWGLiveSDK`):
+```tsx
+import { useMWGLiveSDK } from './useMWGLiveSDK';
+
+function MyComponent() {
+  const sdk = useMWGLiveSDK({
+    onPlayerEvent: (payload) => console.log('Player event:', payload.event),
+    onBroadcastStart: () => console.log('Bắt đầu phát sóng'),
+    onBroadcastStop: () => console.log('Đã dừng phát sóng'),
+    onBroadcastError: (payload) => console.error('Lỗi phát sóng:', payload.message)
+  });
+
+  return (
+    <Button onPress={() => {
+        sdk.initialize();
+        sdk.openPlayer({ id: 1, embed: '...', viewType: 'tab' }); // Mở view dạng Reels
+    }} />
+  );
+}
+```
+
+---
+
 > **Kết Luận:** 
 > Tóm gọn lại, cốt lõi luồng tính năng nằm ở việc bạn cung cấp các cấu hình Data thích hợp (thông qua `MWG...Representable`) => Khởi tạo Dependency tương ứng => Giao quyền cho `MWGSDK` => Gọi hàm `MWGSDK.createPlayerVC(...)` hoặc `MWGSDK.createBroadcastVC(...)` để push ra View hiển thị rồi bắt sự kiện ngược lại ở Client. Chúc bạn tích hợp thành công!
